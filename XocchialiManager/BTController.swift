@@ -19,15 +19,22 @@ struct Constants {
     static let LedCharacteristicUUID = CBUUID(string: "0xFF02")
 }
 
+struct Touchpads {
+    var play: UInt16 = 1337
+    var set: UInt16 = 1337
+    var volumeDown: UInt16 = 1337
+    var volumeUp: UInt16 = 1337
+}
+
 class BTController: NSObject, ObservableObject {
     private var centralManager: CBCentralManager!
     private var unnamedCounter = 0
 
     @Published var peripheral: CBPeripheral?
-    @Published var playValue: UInt16?
-    
+    @Published var touchpads: Touchpads?
+
     var ledCharacteristic: CBCharacteristic?
-    
+
     override init() {
         super.init()
         centralManager = CBCentralManager(delegate: self, queue: .main)
@@ -35,7 +42,7 @@ class BTController: NSObject, ObservableObject {
 
     private func toggleLED(value: Bool) {
         guard let peripheral = peripheral, let ledCharacteristic = ledCharacteristic else { return }
-        let data = Data(repeating: value ? 1 : 0, count : 1)
+        let data = Data(repeating: value ? 1 : 0, count: 1)
         peripheral.writeValue(data, for: ledCharacteristic, type: .withResponse)
     }
 
@@ -86,36 +93,39 @@ extension BTController: CBPeripheralDelegate {
         for characteristic in characteristics {
             debugPrint("  \(characteristic)")
             peripheral.readValue(for: characteristic)
-            
-            if (characteristic.uuid == Constants.LedCharacteristicUUID) {
+
+            if characteristic.uuid == Constants.LedCharacteristicUUID {
                 debugPrint("Found LED Characteristic...")
                 ledCharacteristic = characteristic
             }
-            
         }
     }
 
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
         switch characteristic.uuid {
-        case Constants.ButtonCharacteristicUUID:
-            guard let value = characteristic.value else { return }
-            value.withUnsafeBytes { playValue = $0.load(as: UInt16.self) }
-            peripheral.readValue(for: characteristic)
-            
-        default:
-            break
+            case Constants.ButtonCharacteristicUUID:
+                guard let value = characteristic.value else { return }
+                var t = Touchpads()
+                
+                value[0 ... 1].withUnsafeBytes { t.play = $0.load(as: UInt16.self) }
+                value[2 ... 3].withUnsafeBytes { t.set = $0.load(as: UInt16.self) }
+                value[4 ... 5].withUnsafeBytes { t.volumeDown = $0.load(as: UInt16.self) }
+                value[6 ... 7].withUnsafeBytes { t.volumeUp = $0.load(as: UInt16.self) }
+                
+                touchpads = t
+                peripheral.readValue(for: characteristic)
+                
+            default:
+                break
         }
     }
-    
-    
+
     func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
         debugPrint("Peripheral disconnected: \(peripheral)")
         self.peripheral = nil
         self.ledCharacteristic = nil
-        self.playValue = nil
-        
+        self.touchpads = nil
+
         central.scanForPeripherals(withServices: [Constants.ServiceUUID])
-        
     }
-    
 }

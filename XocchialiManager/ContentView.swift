@@ -9,37 +9,47 @@ import SwiftUI
 
 struct ContentView: View {
     @ObservedObject private var btcontroller = BTController()
-    
+
     var body: some View {
         Text("Xocchiali Manager")
             .font(.largeTitle)
             .rainbowAnimation()
             .padding()
-        
+
         Spacer()
         VStack {
-            HStack() {
+            HStack {
                 Text("Device status: ")
                 Spacer()
                 Text(btcontroller.peripheral == nil ? "Disconnected" : "Connected")
                     .foregroundColor(btcontroller.peripheral == nil ? .red : .green)
             }
-            HStack {
-                Text("Play button status (value: \(btcontroller.playValue != nil ? String(btcontroller.playValue!) : "MIA")) ")
-                Spacer()
-                Text(btcontroller.playValue != nil && btcontroller.playValue! < 250 ? "Touched" : "Not touched")
-                    .foregroundColor(btcontroller.playValue != nil && btcontroller.playValue! < 250 ? .green : .red)
-            }
+            .padding()
         }
         .padding()
         Spacer()
-        
-        HStack {
-            Button("Toggle LED On") {btcontroller.toggleLEDOn() }
+
+        if btcontroller.touchpads != nil {
+            HStack {
+                TouchpadVisualizer(text: "Play", isActive: btcontroller.touchpads!.play < 250)
+                TouchpadVisualizer(text: "Set", isActive: btcontroller.touchpads!.set < 250)
+                TouchpadVisualizer(text: "Vol-", isActive: btcontroller.touchpads!.volumeDown < 250)
+                TouchpadVisualizer(text: "Vol+", isActive: btcontroller.touchpads!.volumeUp < 250)
+            }
+            .padding()
+
             Spacer()
-            Button("Toggle LED Off") {btcontroller.toggleLEDOff() }
+            HStack {
+                Button("Toggle LED On") { btcontroller.toggleLEDOn() }
+                    .padding()
+                Button("Toggle LED Off") { btcontroller.toggleLEDOff() }
+                    .padding()
+            }
+            .padding()
+
         }
-        .padding()
+        
+
         
     }
 }
@@ -47,5 +57,19 @@ struct ContentView: View {
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ContentView()
+    }
+}
+
+struct TouchpadVisualizer: View {
+    let text: String
+    let isActive: Bool
+
+    var body: some View {
+        Text(text)
+            .padding()
+            .overlay {
+                Circle()
+                    .stroke(isActive ? .green : .red, lineWidth: 4)
+            }
     }
 }
