@@ -20,10 +20,62 @@ struct Constants {
 }
 
 struct Touchpads {
-    var play: UInt16 = 1337
-    var set: UInt16 = 1337
-    var volumeDown: UInt16 = 1337
-    var volumeUp: UInt16 = 1337
+    enum State {
+        case idle, shortPress, longPress
+
+        init?(_ pressType: UInt8) {
+            switch pressType {
+            case 0:
+                self = .shortPress
+            case 1:
+                self = .longPress
+            default:
+                return nil
+            }
+        }
+    }
+
+    private(set) var play: State = .idle
+    private(set) var set: State = .idle
+    private(set) var volumeDown: State = .idle
+    private(set) var volumeUp: State = .idle
+
+    subscript(index: UInt8) -> State? {
+        get {
+            switch index {
+            case 8:
+                return play
+            case 9:
+                return set
+            case 4:
+                return volumeDown
+            case 7:
+                return volumeUp
+            default:
+                return nil
+            }
+        }
+        set {
+            switch index {
+            case 8:
+                play = newValue!
+            case 9:
+                set = newValue!
+            case 4:
+                volumeDown = newValue!
+            case 7:
+                volumeUp = newValue!
+            default:
+                debugPrint("Unrecognized index=\(index), ignoring...")
+            }
+        }
+    }
+
+    mutating func changeState(for buttonID: UInt8, state: State?) {
+        guard let state = state else { return }
+        debugPrint("Changing state of \(buttonID) to \(state)")
+        self[buttonID] = state
+    }
 }
 
 class BTController: NSObject, ObservableObject {
@@ -31,7 +83,7 @@ class BTController: NSObject, ObservableObject {
     private var unnamedCounter = 0
 
     @Published var peripheral: CBPeripheral?
-    @Published var touchpads: Touchpads?
+    @Published var touchpads: Touchpads = Touchpads()
 
     var ledCharacteristic: CBCharacteristic?
 
@@ -54,7 +106,7 @@ extension BTController: CBCentralManagerDelegate {
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
         switch central.state {
         case .poweredOn:
-            central.scanForPeripherals(withServices: [Constants.ServiceUUID])
+            central.scanForPeripherals(withServices: nil)
         default:
             debugPrint("Central state: \(central.state)")
         }
@@ -92,31 +144,36 @@ extension BTController: CBPeripheralDelegate {
         debugPrint("Characteristics for service \(service)")
         for characteristic in characteristics {
             debugPrint("  \(characteristic)")
-            peripheral.readValue(for: characteristic)
+
+//            getPropertiesFor(for: characteristic)
 
             if characteristic.uuid == Constants.LedCharacteristicUUID {
                 debugPrint("Found LED Characteristic...")
                 ledCharacteristic = characteristic
+            }
+            if characteristic.uuid == Constants.ButtonCharacteristicUUID {
+                debugPrint("Found Button Characteristic...")
+                peripheral.setNotifyValue(true, for: characteristic)
             }
         }
     }
 
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
         switch characteristic.uuid {
-            case Constants.ButtonCharacteristicUUID:
-                guard let value = characteristic.value else { return }
-                var t = Touchpads()
-                
-                value[0 ... 1].withUnsafeBytes { t.play = $0.load(as: UInt16.self) }
-                value[2 ... 3].withUnsafeBytes { t.set = $0.load(as: UInt16.self) }
-                value[4 ... 5].withUnsafeBytes { t.volumeDown = $0.load(as: UInt16.self) }
-                value[6 ... 7].withUnsafeBytes { t.volumeUp = $0.load(as: UInt16.self) }
-                
-                touchpads = t
-                peripheral.readValue(for: characteristic)
-                
-            default:
-                break
+        case Constants.ButtonCharacteristicUUID:
+            guard let value = characteristic.value else { return }
+
+            let button = value[0]
+            let pressType = value[1]
+            debugPrint("Button=\(button), press type=\(pressType)")
+            touchpads.changeState(for: button, state: Touchpads.State(pressType))
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(1)) {
+                self.touchpads.changeState(for: button, state: Touchpads.State.idle)
+            }
+
+        default:
+            break
         }
     }
 
@@ -124,8 +181,20 @@ extension BTController: CBPeripheralDelegate {
         debugPrint("Peripheral disconnected: \(peripheral)")
         self.peripheral = nil
         self.ledCharacteristic = nil
-        self.touchpads = nil
-
         central.scanForPeripherals(withServices: [Constants.ServiceUUID])
+    }
+}
+
+extension BTController { // UTILS
+    func getPropertiesFor(for char: CBCharacteristic) {
+        if char.properties.contains(.read) {
+            print("\(char.uuid): properties contains .read")
+        }
+        if char.properties.contains(.notify) {
+            print("\(char.uuid): properties contains .notify")
+        }
+        if char.properties.contains(.write) {
+            print("\(char.uuid): properties contains .write")
+        }
     }
 }

@@ -12,6 +12,7 @@
 		3A466A412917143500774396 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3A466A402917143500774396 /* Assets.xcassets */; };
 		3A466A442917143500774396 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3A466A432917143500774396 /* Preview Assets.xcassets */; };
 		3A466A4B2917145500774396 /* BTController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A466A4A2917145500774396 /* BTController.swift */; };
+		3A7859B7291D477800502790 /* NotificationsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A7859B6291D477800502790 /* NotificationsManager.swift */; };
 		3A9079CC29192D7900F1FC10 /* RainbowViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A9079CB29192D7900F1FC10 /* RainbowViewModifier.swift */; };
 /* End PBXBuildFile section */
 
@@ -23,6 +24,7 @@
 		3A466A432917143500774396 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		3A466A4A2917145500774396 /* BTController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BTController.swift; sourceTree = "<group>"; };
 		3A466A4C29171D5700774396 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		3A7859B6291D477800502790 /* NotificationsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsManager.swift; sourceTree = "<group>"; };
 		3A9079CB29192D7900F1FC10 /* RainbowViewModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RainbowViewModifier.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -63,6 +65,7 @@
 				3A9079CB29192D7900F1FC10 /* RainbowViewModifier.swift */,
 				3A466A3C2917143400774396 /* XocchialiManagerApp.swift */,
 				3A466A4A2917145500774396 /* BTController.swift */,
+				3A7859B6291D477800502790 /* NotificationsManager.swift */,
 			);
 			path = XocchialiManager;
 			sourceTree = "<group>";
@@ -148,6 +151,7 @@
 				3A466A4B2917145500774396 /* BTController.swift in Sources */,
 				3A466A3F2917143400774396 /* ContentView.swift in Sources */,
 				3A466A3D2917143400774396 /* XocchialiManagerApp.swift in Sources */,
+				3A7859B7291D477800502790 /* NotificationsManager.swift in Sources */,
 				3A9079CC29192D7900F1FC10 /* RainbowViewModifier.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

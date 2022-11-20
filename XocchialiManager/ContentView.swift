@@ -29,25 +29,24 @@ struct ContentView: View {
         .padding()
         Spacer()
 
-        if btcontroller.touchpads != nil {
-            HStack {
-                TouchpadVisualizer(text: "Play", isActive: btcontroller.touchpads!.play < 250)
-                TouchpadVisualizer(text: "Set", isActive: btcontroller.touchpads!.set < 250)
-                TouchpadVisualizer(text: "Vol-", isActive: btcontroller.touchpads!.volumeDown < 250)
-                TouchpadVisualizer(text: "Vol+", isActive: btcontroller.touchpads!.volumeUp < 250)
-            }
-            .padding()
-
-            Spacer()
-            HStack {
-                Button("Toggle LED On") { btcontroller.toggleLEDOn() }
-                    .padding()
-                Button("Toggle LED Off") { btcontroller.toggleLEDOff() }
-                    .padding()
-            }
-            .padding()
-
+        HStack {
+            TouchpadVisualizer(text: "Play", state: btcontroller.touchpads.play)
+            TouchpadVisualizer(text: "Set", state: btcontroller.touchpads.set)
+            TouchpadVisualizer(text: "Vol-", state: btcontroller.touchpads.volumeDown)
+            TouchpadVisualizer(text: "Vol+", state: btcontroller.touchpads.volumeUp)
         }
+        .padding()
+
+        Spacer()
+        HStack {
+            Button("Toggle LED On") { btcontroller.toggleLEDOn() }
+                .padding()
+            Button("Toggle LED Off") { btcontroller.toggleLEDOff() }
+                .padding()
+        }
+        .padding()
+
+        
         
 
         
@@ -60,16 +59,23 @@ struct ContentView_Previews: PreviewProvider {
     }
 }
 
+let TOUCHPAD_VISUALIZER_COLORS: [Touchpads.State: Color] = [
+    .idle: .red,
+    .shortPress: .green,
+    .longPress: .blue
+]
+
 struct TouchpadVisualizer: View {
     let text: String
-    let isActive: Bool
+    let state: Touchpads.State
 
+    
     var body: some View {
         Text(text)
             .padding()
             .overlay {
                 Circle()
-                    .stroke(isActive ? .green : .red, lineWidth: 4)
+                    .stroke(TOUCHPAD_VISUALIZER_COLORS[state] ?? .red, lineWidth: 4)
             }
     }
 }
